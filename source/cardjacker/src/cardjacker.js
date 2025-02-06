@@ -38,8 +38,8 @@ const env = nunjucks.configure(path.join(__dirname, 'views'), {
 });
 
 function renderUrlAsAvatar(url) {
-    const isValidHttpOrHttpsUrl = /^(http:\/\/|https:\/\/)/.test(url);
-    const html = isValidHttpOrHttpsUrl
+    // Preventing XSS ¯\_(ツ)_/¯
+    const html = isValidHttpUrl(url)
         ? `<div style="border-radius: 50%;overflow: hidden;width: 100%;"><img src="${url}" style="width: 100%; height: 100%; object-fit: cover;"/></div>`
         : "<b>N/A</b>";
     return html;
@@ -68,6 +68,17 @@ function generateRandomCardId() {
 // ---------------------------------------------------------------------------------------------------------------------
 // Validators
 // ---------------------------------------------------------------------------------------------------------------------
+
+function isValidHttpUrl(url) {
+    if (typeof url !== "string") return false;
+    try {
+        const parsedUrl = new URL(url);
+        return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
+    } catch (e) {
+        return false;
+    }
+}
+
 
 function isValidCardId(cardId) {
     if (typeof cardId !== "string") return false;
