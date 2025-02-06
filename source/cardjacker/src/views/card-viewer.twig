@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Card</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="cool-background">
+
+<form class="download-card-form" action="/download-card" method="GET" target="_blank">
+    <iframe class="card-preview-iframe" src="/preview-card?cardId={{ cardId }}"></iframe>
+    <input type="hidden" name="cardId" value="{{ cardId }}">
+    <input type="hidden" name="email" value="{{ email }}">
+    <button class="download-card-btn" type="submit">
+        Download Your Card!
+    </button>
+</form>
+<footer>
+    <a href="/create-card">⬅️ Go back</a>
+</footer>
+</body>
+</html>

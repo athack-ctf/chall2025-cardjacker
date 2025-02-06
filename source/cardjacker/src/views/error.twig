@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="10;url=/">
+    <title>Redirecting...</title>
+    <title>Error</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="err-background">
+<h2>Errors</h2>
+<ul>
+    {% for error in errors %}
+        <li>❌<code>{{ error.path }}: {{ error.msg }}</code></li>
+    {% endfor %}
+</ul>
+<p>This page will redirect in 10 seconds... If it doesn't, <a href="/">click here</a>.</p>
+</body>
+</html>
