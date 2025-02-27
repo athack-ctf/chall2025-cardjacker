@@ -21,6 +21,8 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 app.use(express.urlencoded({extended: true}));
 
+const config = {prefs: {mode: 'dark'}, /* TODO generatePdf: true */};
+
 // ---------------------------------------------------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------------------------------------------------
@@ -38,11 +40,8 @@ const env = nunjucks.configure(path.join(__dirname, 'views'), {
 });
 
 function renderUrlAsAvatar(url) {
-    // Preventing XSS ¯\_(ツ)_/¯
-    const html = isValidHttpUrl(url)
-        ? `<div style="border-radius: 50%;overflow: hidden;width: 100%;"><img src="${url}" style="width: 100%; height: 100%; object-fit: cover;"/></div>`
-        : "<b>N/A</b>";
-    return html;
+    const imgUrl = isValidHttpUrl(url) ? url : `https://i.pravatar.cc/400?u=${Math.floor(Math.random() * 1000) + 1}`;
+    return `<div style="border-radius: 50%;overflow: hidden;width: 100%;"><img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;"/></div>`
 }
 
 env.addFilter('renderUrlAsAvatar', renderUrlAsAvatar);
@@ -111,6 +110,7 @@ async function isValidGitHubHandle(githubHandle) {
     }
 }
 
+
 // ---------------------------------------------------------------------------------------------------------------------
 // Routes
 // ---------------------------------------------------------------------------------------------------------------------
@@ -119,9 +119,46 @@ app.get('/', (req, res) => {
     res.redirect(`/create-card`);
 });
 
-app.get('/create-card', (req, res) => {
-    res.render('create-card.twig');
+app.get('/', (req, res) => {
+    res.redirect(`/create-card`);
 });
+
+app.get('/create-card', (req, res) => {
+    res.render('create-card.twig', {config: config});
+});
+
+app.post('/set-config', [
+        body('config')
+            .trim()
+            .isString()
+            .notEmpty()
+            .withMessage('Config must be a non-empty string.'),
+        body('key')
+            .trim()
+            .isString()
+            .notEmpty()
+            .withMessage('Config must be a non-empty string.'),
+        body('val')
+            .trim()
+            .isString()
+            .notEmpty()
+            .withMessage('Config must be a non-empty string.'),
+    ],
+    async (req, res) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({errors: errors.array()});
+        }
+        const cfg = req.body.config;
+        if (cfg in config) {
+            const key = req.body.key;
+            const val = req.body.val;
+            config[cfg][key] = val;
+            res.json({message: `Mode set to ${val}`});
+        } else {
+            return res.status(400).json({errors: [`Invalid configuration ${val}`]});
+        }
+    });
 
 app.post('/create-card', [
         body('firstName')
@@ -149,6 +186,7 @@ app.post('/create-card', [
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).render('error.twig', {
+                config: config,
                 success: false,
                 message: "Validation failed",
                 errors: errors.array()
@@ -156,29 +194,22 @@ app.post('/create-card', [
         }
 
         const userData = {};
-
         const userAttribs = ['firstName', 'lastName', 'email', 'github']
         for (const attr of userAttribs) {
             userData[attr] = req.body[attr];
         }
-
+        const companyAttribs = ['company']
         const companyData = {};
-        for (let attr in req.body) {
-            if (attr in userAttribs) continue;
+        for (const attr of companyAttribs) {
             companyData[attr] = req.body[attr];
         }
 
         userData.getAvatarUrl = async function () {
-            // Lazy memoized construction of avatarUrl
-            if (typeof this.avatarUrl == "undefined") {
-                if (await isValidGitHubHandle(this.github)) {
-                    this.avatarUrl = `https://github.com/${this.github}.png`
-                } else {
-                    // Using a fake avatar with the same dims as Github ones
-                    this.avatarUrl = `https://i.pravatar.cc/400?u=${this.email}`;
-                }
+            if (typeof this.avatarUrl == 'undefined') {
+                this.avatarUrl = (await isValidGitHubHandle(this.github)) ?
+                    `https://github.com/${this.github}.png` :
+                    'undefined';
             }
-
             return this.avatarUrl;
         };
 
@@ -194,7 +225,12 @@ app.post('/create-card', [
             });
         } catch (err) {
             console.error('Error rendering card:', err);
-            return res.status(500).send('Error rendering card');
+            return res.status(500).render('error.twig', {
+                config: config,
+                success: false,
+                message: 'Error rendering card',
+                errors: []
+            });
         }
 
         // Save rendered HTML to a file
@@ -204,7 +240,12 @@ app.post('/create-card', [
             res.redirect(`/view-card?cardId=${cardId}&email=${email}`);
         } catch (err) {
             console.error('Error writing file:', err);
-            return res.status(500).send('Error saving card');
+            return res.status(500).render('error.twig', {
+                config: config,
+                success: false,
+                message: 'Error saving card',
+                errors: []
+            });
         }
 
     }
@@ -236,6 +277,7 @@ app.get('/view-card', [
         const cardId = req.query.cardId;
 
         res.render('card-viewer.twig', {
+            config: config,
             cardId: cardId,
             email: req.query.email,
         });
@@ -252,6 +294,7 @@ app.get('/preview-card', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).render('error.twig', {
+            config: config,
             success: false,
             message: "Validation failed",
             errors: errors.array()
@@ -273,6 +316,7 @@ app.get('/preview-card', [
         res.send(fileContent);
     } catch (error) {
         res.status(500).render('error.twig', {
+            config: config,
             message: "Internal Server Error",
             code: 500,
         });
@@ -295,6 +339,7 @@ app.get('/download-card', [
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).render('error.twig', {
+            config: config,
             success: false,
             message: "Validation failed",
             errors: errors.array()
@@ -313,6 +358,7 @@ app.get('/download-card', [
         } catch (error) {
             console.error(error.message)
             res.status(500).render('error.twig', {
+                config: config,
                 message: "Error generating PDF",
                 code: 500,
             });

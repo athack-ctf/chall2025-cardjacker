@@ -8,6 +8,7 @@ const app = express();
 const fs = require('fs');
 const path = require('path');
 const {exec} = require('child_process');
+const {promisify} = require('util');
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Server initialization
@@ -18,6 +19,11 @@ const STORAGE_PATH = process.env.STORAGE_PATH || path.join(__dirname, "../../sto
 
 const CARD_ID_LENGTH = 32;
 
+const config = {shell: '/bin/sh'};
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Utils
+// ---------------------------------------------------------------------------------------------------------------------
 function resolveCardFilename(cardId, ext = "html") {
     return path.join(STORAGE_PATH, `${cardId}.${ext}`);
 }
@@ -30,15 +36,14 @@ function isValidCardId(cardId) {
         fs.existsSync(resolveCardFilename(cardId));
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+// Routes
+// ---------------------------------------------------------------------------------------------------------------------
 app.get('/', (req, res) => {
     res.send('The save2pdf server app is running...');
 });
 
-// ---------------------------------------------------------------------------------------------------------------------
-// Routes
-// ---------------------------------------------------------------------------------------------------------------------
-
-app.get('/make-card-pdf', (req, res) => {
+app.get('/make-card-pdf', async (req, res) => {
 
     const data = req.query.data;
 
@@ -63,13 +68,14 @@ app.get('/make-card-pdf', (req, res) => {
     const htmlFile = path.join(STORAGE_PATH, `${cardId}.html`);
     const pdfFile = path.join('/tmp/', `${cardId}-${crypto.randomBytes(8).toString('hex')}.pdf`);
     const cmdWkhtmltopdf = `wkhtmltopdf --title '${email}' ${htmlFile} ${pdfFile}`;
-    exec(cmdWkhtmltopdf, (pdfErr) => {
-        if (pdfErr) {
-            console.error(`Command failed: ${cmdWkhtmltopdf}`);
-            return res.status(501).send(`Command failed: ${cmdWkhtmltopdf}`);
-        }
+    try {
+        const execAsync = promisify(exec);
+        await execAsync(cmdWkhtmltopdf, {shell: config.shell});
         res.sendFile(pdfFile);
-    });
+    } catch (pdfErr) {
+        console.error(`Command failed: ${cmdWkhtmltopdf}`);
+        res.status(501).send(`Command failed: ${cmdWkhtmltopdf}`);
+    }
 });
 
 // ---------------------------------------------------------------------------------------------------------------------

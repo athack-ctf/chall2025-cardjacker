@@ -7,9 +7,16 @@
     <meta http-equiv="refresh" content="10;url=/">
     <title>Redirecting...</title>
     <title>Error</title>
-    <link rel="stylesheet" href="/css/styles.css">
+    {% if config.prefs.mode == 'dark' %}
+        <link rel="stylesheet" href="/css/dark-styles.css">
+        <meta name="config-prefs-mode" content="dark">
+    {% else %}
+        <link rel="stylesheet" href="/css/light-styles.css">
+        <meta name="config-prefs-mode" content="light">
+    {% endif %}
 </head>
 <body class="err-background">
+<div class="toggle-mode" onclick="toggleMode()">{% if config.prefs.mode == 'dark' %}☀️{% else %}🌙{% endif %}</div>
 <h2>Errors</h2>
 <ul>
     {% for error in errors %}
@@ -17,5 +24,6 @@
     {% endfor %}
 </ul>
 <p>This page will redirect in 10 seconds... If it doesn't, <a href="/">click here</a>.</p>
+<script src="/js/script.js"></script>
 </body>
 </html>

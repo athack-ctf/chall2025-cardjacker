@@ -4,10 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Card</title>
-    <link rel="stylesheet" href="/css/styles.css">
+    {% if config.prefs.mode == 'dark' %}
+        <link rel="stylesheet" href="/css/dark-styles.css">
+        <meta name="config-prefs-mode" content="dark">
+    {% else %}
+        <link rel="stylesheet" href="/css/light-styles.css">
+        <meta name="config-prefs-mode" content="light">
+    {% endif %}
 </head>
 <body class="cool-background">
-<h2>Card Jacker</h2>
+<div class="toggle-mode" onclick="toggleMode()">{% if config.prefs.mode == 'dark' %}☀️{% else %}🌙{% endif %}</div>
+<h2>Cardjacker</h2>
 <p>We make free business cards for open source developers (like us)!</p>
 
 <form id="create-card-from" action="/create-card" method="post">
@@ -37,5 +44,6 @@
 <footer>
     <a href="https://github.com/orgs/athack-ctf/repositories" target="_blank">Check our Github organisation!</a>
 </footer>
+<script src="/js/script.js"></script>
 </body>
 </html>

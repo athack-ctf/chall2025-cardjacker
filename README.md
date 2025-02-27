@@ -1,4 +1,4 @@
-# Chall - Card Jacker
+# Chall - Cardjacker
 
 > An all-or-nothing white box challenge requiring chaining 3 web vulnerabilities.
 
