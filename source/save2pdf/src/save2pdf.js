@@ -4,7 +4,6 @@
 
 const express = require('express');
 const crypto = require('crypto');
-const app = express();
 const fs = require('fs');
 const path = require('path');
 const {exec} = require('child_process');
@@ -14,7 +13,8 @@ const {promisify} = require('util');
 // Server initialization
 // ---------------------------------------------------------------------------------------------------------------------
 
-const PORT = 1984;
+const app = express();
+
 const STORAGE_PATH = process.env.STORAGE_PATH || path.join(__dirname, "../../storage");
 
 const CARD_ID_LENGTH = 32;
@@ -67,14 +67,14 @@ app.get('/make-card-pdf', async (req, res) => {
 
     const htmlFile = path.join(STORAGE_PATH, `${cardId}.html`);
     const pdfFile = path.join('/tmp/', `${cardId}-${crypto.randomBytes(8).toString('hex')}.pdf`);
-    const cmdWkhtmltopdf = `wkhtmltopdf --title '${email}' ${htmlFile} ${pdfFile}`;
+    const cmdWkhtmltopdfCmd = `wkhtmltopdf --title '${email}' ${htmlFile} ${pdfFile}`;
     try {
         const execAsync = promisify(exec);
-        await execAsync(cmdWkhtmltopdf, {shell: config.shell});
+        await execAsync(cmdWkhtmltopdfCmd, {shell: config.shell});
         res.sendFile(pdfFile);
     } catch (pdfErr) {
-        console.error(`Command failed: ${cmdWkhtmltopdf}`);
-        res.status(501).send(`Command failed: ${cmdWkhtmltopdf}`);
+        console.error(`Command failed: ${cmdWkhtmltopdfCmd}`);
+        res.status(501).send(`Command failed: ${cmdWkhtmltopdfCmd}`);
     }
 });
 
@@ -82,6 +82,8 @@ app.get('/make-card-pdf', async (req, res) => {
 // Starting the server!
 // ---------------------------------------------------------------------------------------------------------------------
 
+const PORT = 1984;
+
 app.listen(PORT, () => {
-    console.log(`save2pf is listening at http://localhost:${PORT}`);
+    console.log(`save2pdf is listening at http://localhost:${PORT}`);
 });

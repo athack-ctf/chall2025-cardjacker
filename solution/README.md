@@ -1,10 +1,9 @@
-# How to Solve the Challenge?
+# Solution
 
-Provide reproducible steps to solve the challenge. This can include:
+## Exploit Chain
 
-- Runnable code (e.g., `PoC.py`)
-- A Bash script or a sequence of commented commands
-- Well-explained instructions
-- ...
+> (1) Prototype Pollution -> (2) SSRF -> (3) RCE (Spaceless Command Injection)
 
-Ensure that all dependencies required to build or run the solution are provided (e.g., `requirements.txt`) or thoroughly documented.
+## Exploit
+
+1. 

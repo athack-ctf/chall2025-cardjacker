@@ -14,14 +14,13 @@ const axios = require('axios');
 // ---------------------------------------------------------------------------------------------------------------------
 
 const app = express();
-const PORT = 2025;
 
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, '../public')));
 
 app.use(express.urlencoded({extended: true}));
 
-const config = {prefs: {mode: 'dark'}, /* TODO generatePdf: true */};
+const config = {prefs: {mode: 'dark'}, saveToPdfPort: 1984};
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Constants
@@ -99,17 +98,6 @@ function isLikelyValidGitHubHandle(username) {
     const regex = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,37}[a-zA-Z0-9])?$/;
     return regex.test(username);
 }
-
-async function isValidGitHubHandle(githubHandle) {
-    // Trick: checking if the Github handle is valid by verifying the existence of a profile pic
-    try {
-        const githubProfilePicUrl = `https://github.com/${githubHandle}.png`;
-        return (await axios.get(githubProfilePicUrl, {maxRedirects: 2})).status === 200;
-    } catch {
-        return false;
-    }
-}
-
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Routes
@@ -205,10 +193,17 @@ app.post('/create-card', [
         }
 
         userData.getAvatarUrl = async function () {
+            // Lazy loading pattern
             if (typeof this.avatarUrl == 'undefined') {
-                this.avatarUrl = (await isValidGitHubHandle(this.github)) ?
-                    `https://github.com/${this.github}.png` :
-                    'undefined';
+                // Trick: checking if the Github handle is valid by verifying the existence of a profile pic
+                let isValidGithubHandle;
+                try {
+                    const githubProfilePicUrl = `https://github.com/${this.github}.png`;
+                    isValidGithubHandle = (await axios.get(githubProfilePicUrl, {maxRedirects: 2})).status === 200;
+                } catch {
+                    isValidGithubHandle = false;
+                }
+                this.avatarUrl = isValidGithubHandle ? `https://github.com/${this.github}.png` : 'undefined';
             }
             return this.avatarUrl;
         };
@@ -352,7 +347,7 @@ app.get('/download-card', [
 
     if (!fs.existsSync(cardPdf)) {
         try {
-            const url = `http://localhost:1984/make-card-pdf?data=${email}%20${cardId}`;
+            const url = `http://localhost:${parseInt(config.saveToPdfPort)}/make-card-pdf?data=${email}%20${cardId}`;
             const response = await axios.get(url, {responseType: "arraybuffer"});
             fs.writeFileSync(cardPdf, response.data);
         } catch (error) {
@@ -371,6 +366,8 @@ app.get('/download-card', [
 // ---------------------------------------------------------------------------------------------------------------------
 // Starting app
 // ---------------------------------------------------------------------------------------------------------------------
+
+const PORT = 2025;
 
 app.listen(PORT, () => {
     console.log(`cardjacker is listening at http://localhost:${PORT}`);
