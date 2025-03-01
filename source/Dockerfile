@@ -10,6 +10,7 @@ RUN apt-get update \
     dnsutils \
     netcat-traditional \
     iputils-ping \
+    iproute2 \
     wget \
     curl \
     python3 \
