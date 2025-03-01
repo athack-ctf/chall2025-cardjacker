@@ -55,12 +55,10 @@ function resolveCardFilename(cardId, ext = "html") {
     return path.join(STORAGE_PATH, `${cardId}.${ext}`);
 }
 
-function generateRandomCardId() {
-    return crypto.createHash('sha512')
-        .update(Math.random().toString())
-        .digest('hex')
-        .toLowerCase()
-        .slice(0, CARD_ID_LENGTH);
+function deriveCardId(params) {
+    const concatenated = params.join('');
+    const hash = crypto.createHash('sha256').update(concatenated).digest('hex');
+    return hash.substring(0, CARD_ID_LENGTH);
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -208,8 +206,12 @@ app.post('/create-card', [
             return this.avatarUrl;
         };
 
-        const {email} = req.body;
-        const cardId = generateRandomCardId();
+        const cardId = deriveCardId([
+            userData.firstName,
+            userData.lastName,
+            userData.email,
+            await userData.getAvatarUrl(),
+        ]);
 
         let html;
         try {
@@ -232,7 +234,7 @@ app.post('/create-card', [
         const filePath = resolveCardFilename(cardId, "html");
         try {
             fs.writeFileSync(filePath, html);
-            res.redirect(`/view-card?cardId=${cardId}&email=${email}`);
+            res.redirect(`/view-card?cardId=${cardId}&email=${userData.email}`);
         } catch (err) {
             console.error('Error writing file:', err);
             return res.status(500).render('error.twig', {
