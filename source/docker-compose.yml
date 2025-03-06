@@ -1,6 +1,8 @@
+version: '3.8'
+
 services:
   cardjacker:
-    image: chall2025-cardjacker
+    image: athack-ctf/chall2025-cardjacker:latest
     hostname: cardjacker
     build:
       context: .
