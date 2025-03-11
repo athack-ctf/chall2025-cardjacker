@@ -17,6 +17,7 @@ flags:
 
 tags:
   - http
+  - interac
 
 files:
     - ./offline-artifacts/cardjacker-source-code.zip
