@@ -1,10 +1,10 @@
+version: '3.8'
 services:
   cardjacker:
+    image: athack-ctf/chall2025-cardjacker:latest
     build:
       context: .
       dockerfile: Dockerfile
     hostname: cardjacker
-    image: athack-ctf/chall2025-cardjacker:latest
     ports:
     - 52043:2025
-version: '3.8'
