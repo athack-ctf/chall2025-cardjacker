@@ -2,9 +2,7 @@ version: '3.8'
 services:
   cardjacker:
     image: athack-ctf/chall2025-cardjacker:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: ./source
     hostname: cardjacker
     ports:
     - 52043:2025
