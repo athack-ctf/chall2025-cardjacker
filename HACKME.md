@@ -1,3 +1,0 @@
-Who doesn't love open source?
-
-Cardjacker, is a software for creating buisness cards dedicated for developers. It is free, open source, and it may even have an open (shell) access for those who know their way around...
