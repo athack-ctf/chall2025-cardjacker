@@ -86,7 +86,7 @@ function isValidCardId(cardId) {
 const isTextContainingOnlyAlphabeticAndSpaces = (text) => {
     if (typeof text !== "string") return false;
     if (/^[a-zA-Z\s]+$/.test(text) === false) {
-        throw new Error('');
+        return false;
     }
     return true;
 }
