@@ -105,10 +105,6 @@ app.get('/', (req, res) => {
     res.redirect(`/create-card`);
 });
 
-app.get('/', (req, res) => {
-    res.redirect(`/create-card`);
-});
-
 app.get('/create-card', (req, res) => {
     res.render('create-card.twig', {config: config});
 });
